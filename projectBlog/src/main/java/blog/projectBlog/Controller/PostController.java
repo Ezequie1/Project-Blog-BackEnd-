@@ -33,4 +33,9 @@ public class PostController {       //Acesse http://localhost:8080/swagger-ui/in
     public ResponseEntity editPost(@PathVariable Long id, @RequestBody @Valid RequestPost post){
         return ResponseEntity.status(200).body(service.editPost(id, post));
     }
+
+    @PutMapping("/Favorite/{id}")
+    public ResponseEntity changeFavorite(@PathVariable Long id){
+        return ResponseEntity.status(200).body(service.setFavorite(id));
+    }
 }

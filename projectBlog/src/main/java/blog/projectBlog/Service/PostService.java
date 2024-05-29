@@ -33,4 +33,11 @@ public class PostService {
 
         return repository.save(postActual);
     }
+
+    public Post setFavorite(Long id) {
+        Post post = repository.getReferenceById(id);
+        post.setFavorite(!post.isFavorite());
+
+        return repository.save(post);
+    }
 }
