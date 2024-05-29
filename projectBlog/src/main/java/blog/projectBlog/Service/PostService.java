@@ -17,6 +17,11 @@ public class PostService {
     public List<Post> getAll(){
         return repository.findAll();
     }
+
+    public List<Post> getPostsContaining(String value) {
+        return repository.findByTitleContainingOrTextContaining(value, value);
+    }
+
     public Post createPost(RequestPost post) {
         return repository.save(
                 new Post(

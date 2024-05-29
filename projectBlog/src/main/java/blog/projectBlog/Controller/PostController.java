@@ -24,6 +24,11 @@ public class PostController {       //Acesse http://localhost:8080/swagger-ui/in
         return ResponseEntity.status(200).body(service.getAll());
     }
 
+    @GetMapping("/Search/{value}")
+    public ResponseEntity<List<Post>> getPostsContaining(@PathVariable String value){
+        return ResponseEntity.status(200).body(service.getPostsContaining(value));
+    }
+
     @PostMapping("/Create")
     public ResponseEntity createPost(@RequestBody @Valid RequestPost post){
         return ResponseEntity.status(201).body(service.createPost(post));
