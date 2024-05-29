@@ -24,4 +24,13 @@ public class PostService {
                     post.getText(),
                     false));
     }
+
+    public Post editPost(Long id, RequestPost post) {
+        Post postActual = repository.getReferenceById(id);
+
+        postActual.setTitle(post.getTitle());
+        postActual.setText(post.getText());
+
+        return repository.save(postActual);
+    }
 }

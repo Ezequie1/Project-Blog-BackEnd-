@@ -23,8 +23,14 @@ public class PostController {       //Acesse http://localhost:8080/swagger-ui/in
     public ResponseEntity<List<Post>> getPosts(){
         return ResponseEntity.status(200).body(service.getAll());
     }
+
     @PostMapping("/Create")
     public ResponseEntity createPost(@RequestBody @Valid RequestPost post){
         return ResponseEntity.status(201).body(service.createPost(post));
+    }
+
+    @PutMapping("/Edit/{id}")
+    public ResponseEntity editPost(@PathVariable Long id, @RequestBody @Valid RequestPost post){
+        return ResponseEntity.status(200).body(service.editPost(id, post));
     }
 }
