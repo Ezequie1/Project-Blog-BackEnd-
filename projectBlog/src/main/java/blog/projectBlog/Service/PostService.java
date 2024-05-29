@@ -40,4 +40,9 @@ public class PostService {
 
         return repository.save(post);
     }
+
+    public String deletePost(Long id) {
+        repository.deleteById(id);
+        return "Deletado com sucesso!";
+    }
 }

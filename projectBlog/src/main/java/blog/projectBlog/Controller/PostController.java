@@ -38,4 +38,9 @@ public class PostController {       //Acesse http://localhost:8080/swagger-ui/in
     public ResponseEntity changeFavorite(@PathVariable Long id){
         return ResponseEntity.status(200).body(service.setFavorite(id));
     }
+
+    @DeleteMapping("/Delete/{id}")
+    public ResponseEntity deletePost(@PathVariable Long id){
+        return ResponseEntity.status(200).body(service.deletePost(id));
+    }
 }
