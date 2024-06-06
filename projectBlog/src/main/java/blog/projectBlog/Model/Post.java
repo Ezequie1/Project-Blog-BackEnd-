@@ -18,13 +18,13 @@ public class Post {
     private String title;
     private String text;
     private boolean favorite;
-    private LocalDate data_post;
+    private LocalDate dataPost;
 
     public Post(String title, String text, boolean favorite) {
         this.title = title;
         this.text = text;
         this.favorite = favorite;
-        this.data_post = LocalDate.now();
+        this.dataPost = LocalDate.now();
     }
 
     public Post() {
