@@ -131,7 +131,7 @@ class PostServiceTest {
     }
 
     @Test
-    @DisplayName("Must be return a EntityNotFoundException when post with id passed its not was found")
+    @DisplayName("Must be return a EntityNotFoundException when post with id passed its not was found in editPost endpoint")
     void editPostCase2() {
         Post oldPost = new Post("Title post", "Text post", false);
 
@@ -183,7 +183,7 @@ class PostServiceTest {
     }
 
     @Test
-    @DisplayName("Must be return a EntityNotFoundException when post with id passed its not was found")
+    @DisplayName("Must be return a EntityNotFoundException when post with id passed its not was found in setFavorite endpoint")
     void setFavoriteCase3() {
         when(repository.existsById(1L)).thenReturn(false);
 
@@ -204,7 +204,7 @@ class PostServiceTest {
     }
 
     @Test
-    @DisplayName("Must be return a EntityNotFoundException when post with id passed its not was found")
+    @DisplayName("Must be return a EntityNotFoundException when post with id passed its not was found in deletePost endpoint")
     void deletePostCase2() {
         when(repository.existsById(1L)).thenReturn(false);
 
