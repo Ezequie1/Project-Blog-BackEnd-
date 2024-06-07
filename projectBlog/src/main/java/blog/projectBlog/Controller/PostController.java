@@ -3,6 +3,7 @@ package blog.projectBlog.Controller;
 import blog.projectBlog.Model.Post;
 import blog.projectBlog.Model.RequestPost;
 import blog.projectBlog.Service.PostService;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -10,6 +11,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/Posts")
@@ -40,7 +42,7 @@ public class PostController {       //Acesse http://localhost:8080/swagger-ui/in
     }
 
     @PutMapping("/Favorite/{id}")
-    public ResponseEntity<Post> changeFavorite(@PathVariable Long id){
+    public ResponseEntity<Post> changeFavorite(@PathVariable Long id) {
         return ResponseEntity.status(200).body(service.setFavorite(id));
     }
 

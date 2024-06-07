@@ -3,6 +3,7 @@ package blog.projectBlog.Service;
 import blog.projectBlog.Model.Post;
 import blog.projectBlog.Model.RequestPost;
 import blog.projectBlog.Repository.PostRepository;
+import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -10,6 +11,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+import org.junit.jupiter.api.function.Executable;
 import java.util.Arrays;
 import java.util.List;
 
@@ -107,15 +109,16 @@ class PostServiceTest {
 
     @Test
     @DisplayName("Must be return a post with title and text edited")
-    void editPost() {
+    void editPostCase1() {
         String oldTitle = "Title post";
         String oldText = "Text post";
         Post oldPost = new Post(oldTitle, oldText, false);
 
         when(repository.getReferenceById(oldPost.getId())).thenReturn(oldPost);
+        when(repository.existsById(oldPost.getId())).thenReturn(true);
         when(repository.save(oldPost)).thenReturn(oldPost);
 
-        Post result = service.editPost( oldPost.getId(), new RequestPost("Title post edited!", "Text post edited!"));
+        Post result = service.editPost(oldPost.getId(), new RequestPost("Title post edited!", "Text post edited!"));
 
         verify(repository, times(1)).getReferenceById(oldPost.getId());
         verify(repository, times(1)).save(oldPost);
@@ -128,11 +131,26 @@ class PostServiceTest {
     }
 
     @Test
+    @DisplayName("Must be return a EntityNotFoundException when post with id passed its not was found")
+    void editPostCase2() {
+        Post oldPost = new Post("Title post", "Text post", false);
+
+        when(repository.existsById(oldPost.getId())).thenReturn(false);
+
+        Executable executable = () -> service.editPost(oldPost.getId(), new RequestPost("Title post edited!", "Text post edited!"));
+
+        assertThrows(EntityNotFoundException.class, executable);
+
+        verify(repository, times(1)).existsById(oldPost.getId());
+    }
+
+    @Test
     @DisplayName("Must be return a post with a boolean value changed for true")
     void setFavoriteCase1() {
         Post oldPost = new Post("Title post", "Text post", false);
 
         when(repository.getReferenceById(1L)).thenReturn(oldPost);
+        when(repository.existsById(1L)).thenReturn(true);
         when(repository.save(oldPost)).thenReturn(oldPost);
 
         Post result = service.setFavorite(1L);
@@ -151,6 +169,7 @@ class PostServiceTest {
         Post oldPost = new Post("Title post", "Text post", true);
 
         when(repository.getReferenceById(1L)).thenReturn(oldPost);
+        when(repository.existsById(1L)).thenReturn(true);
         when(repository.save(oldPost)).thenReturn(oldPost);
 
         Post result = service.setFavorite(1L);
@@ -164,14 +183,33 @@ class PostServiceTest {
     }
 
     @Test
+    @DisplayName("Must be return a EntityNotFoundException when post with id passed its not was found")
+    void setFavoriteCase3() {
+        when(repository.existsById(1L)).thenReturn(false);
+
+        assertThrows(EntityNotFoundException.class, () -> service.setFavorite(1L));
+
+        verify(repository, times(1)).existsById(1L);
+    }
+
+    @Test
     @DisplayName("Must be return a text 'Deletado com sucesso!'")
-    void deletePost() {
-        Post post = new Post("Title post", "Text post", false);
+    void deletePostCase1() {
+        when(repository.existsById(1L)).thenReturn(true);
 
-        String result = service.deletePost(post.getId());
+        assertEquals("Deletado com sucesso!", service.deletePost(1L));
 
-        verify(repository, times(1)).deleteById(post.getId());
+        verify(repository, times(1)).existsById(1L);
+        verify(repository, times(1)).deleteById(1L);
+    }
 
-        assertEquals("Deletado com sucesso!", result);
+    @Test
+    @DisplayName("Must be return a EntityNotFoundException when post with id passed its not was found")
+    void deletePostCase2() {
+        when(repository.existsById(1L)).thenReturn(false);
+
+        assertThrows(EntityNotFoundException.class, () -> service.deletePost(1L));
+
+        verify(repository, times(1)).existsById(1L);
     }
 }

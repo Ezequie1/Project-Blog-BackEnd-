@@ -3,6 +3,7 @@ package blog.projectBlog.Service;
 import blog.projectBlog.Model.Post;
 import blog.projectBlog.Model.RequestPost;
 import blog.projectBlog.Repository.PostRepository;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -27,10 +28,14 @@ public class PostService {
                 new Post(
                     post.getTitle(),
                     post.getText(),
-                    false));
+                    false
+                )
+        );
     }
 
     public Post editPost(Long id, RequestPost post) {
+        if(!repository.existsById(id)) throw new EntityNotFoundException();
+
         Post postActual = repository.getReferenceById(id);
 
         postActual.setTitle(post.getTitle());
@@ -40,13 +45,16 @@ public class PostService {
     }
 
     public Post setFavorite(Long id) {
+        if(!repository.existsById(id)) throw new EntityNotFoundException();
+
         Post post = repository.getReferenceById(id);
         post.setFavorite(!post.isFavorite());
-
         return repository.save(post);
     }
 
     public String deletePost(Long id) {
+        if(!repository.existsById(id)) throw new EntityNotFoundException();
+
         repository.deleteById(id);
         return "Deletado com sucesso!";
     }
