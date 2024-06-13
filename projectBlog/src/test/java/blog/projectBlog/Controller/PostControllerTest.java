@@ -8,14 +8,18 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 
 import java.util.List;
 
+import static org.hamcrest.Matchers.is;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -44,39 +48,41 @@ class PostControllerTest {
                 new Post("Title for second post", "Text for second post", false)
         );
 
-        when(service.getAll()).thenReturn(posts);
-        String response = mockMvc.perform(
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<Post> postPage = new PageImpl<>(posts, pageable, posts.size());
+
+        when(service.getAll(pageable)).thenReturn(postPage);
+
+        mockMvc.perform(
                 get("/Posts")
                     .contentType(MediaType.APPLICATION_JSON))
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$", hasSize(2)
+                    .andExpect(jsonPath("$.content", hasSize(2)))
+                    .andExpect(content().json(objectMapper.writeValueAsString(postPage)
                 )
         ).andReturn().getResponse().getContentAsString();
 
-        verify(service, times(1)).getAll();
-
-        List<Post> list = objectMapper.readValue(response, new TypeReference<>() {});
-
-        assertEquals(posts.get(0), list.get(0));
-        assertEquals(posts.get(1), list.get(1));
+        verify(service, times(1)).getAll(pageable);
     }
 
     @Test
     @DisplayName("Must be return a empty array when database is empty")
     void getPostsCase2() throws Exception {
-        when(service.getAll()).thenReturn(List.of());
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<Post> postPage = new PageImpl<>(List.of(), pageable, 0);
+
+        when(service.getAll(pageable)).thenReturn(postPage);
 
         mockMvc.perform(
                 get("/Posts")
                     .contentType(MediaType.APPLICATION_JSON))
                     .andExpect(status().isOk())
                     .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                    .andExpect(content().json("[]"))
-                    .andExpect(jsonPath("$", hasSize(0)
+                    .andExpect(jsonPath("$.content", hasSize(0)
                 )
         );
 
-        verify(service, times(1)).getAll();
+        verify(service, times(1)).getAll(pageable);
     }
 
     @Test
@@ -87,38 +93,43 @@ class PostControllerTest {
                 new Post("Title for second post", "Text for second post", false)
         );
 
-        when(service.getPostsContaining("for")).thenReturn(posts);
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<Post> postPage = new PageImpl<>(posts, pageable, posts.size());
 
-        String response = mockMvc.perform(
-                get("/Posts/Search/{value}", "for")
-                    .contentType(MediaType.APPLICATION_JSON))
-                    .andExpect(status().isOk())
-                    .andExpect(jsonPath("$", hasSize(2)
-                )
+        when(service.getPostsContaining("for", pageable)).thenReturn(postPage);
+
+        mockMvc.perform(
+            get("/Posts/Search/{value}", "for")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content", hasSize(2)))
+                .andExpect(jsonPath("$.content[0].title", is(posts.get(0).getTitle())))
+                .andExpect(jsonPath("$.content[0].text", is(posts.get(0).getText())))
+                .andExpect(jsonPath("$.content[1].title", is(posts.get(1).getTitle())))
+                .andExpect(jsonPath("$.content[1].text", is(posts.get(1).getText())))
+                .andExpect(content().json(objectMapper.writeValueAsString(postPage)
+            )
         ).andReturn().getResponse().getContentAsString();
 
-        verify(service, times(1)).getPostsContaining("for");
-
-        List<Post> list = objectMapper.readValue(response, new TypeReference<>() {});
-
-        assertEquals(posts.get(0), list.get(0));
-        assertEquals(posts.get(1), list.get(1));
+        verify(service, times(1)).getPostsContaining("for", pageable);
     }
 
     @Test
     @DisplayName("Must be return an empty array when title and text not containing value 'Random value'")
     void getPostsContainingCase2() throws Exception {
-        when(service.getPostsContaining("Random value")).thenReturn(List.of());
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<Post> postPage = new PageImpl<>(List.of(), pageable, 0);
+
+        when(service.getPostsContaining("Random value", pageable)).thenReturn(postPage);
 
         mockMvc.perform(
-                        get("/Posts/Search/{value}", "Random value")
-                                .contentType(MediaType.APPLICATION_JSON))
-                                .andExpect(status().isOk())
-                                .andExpect(jsonPath("$", hasSize(0)))
-                                .andExpect(content().json("[]")
-                        );
+                get("/Posts/Search/{value}", "Random value")
+                        .contentType(MediaType.APPLICATION_JSON))
+                        .andExpect(status().isOk())
+                        .andExpect(jsonPath("$.content", hasSize(0))
+                );
 
-        verify(service, times(1)).getPostsContaining("Random value");
+        verify(service, times(1)).getPostsContaining("Random value", pageable);
     }
 
     @Test
@@ -133,7 +144,7 @@ class PostControllerTest {
                                 .contentType(MediaType.APPLICATION_JSON).content("{\"title\":\"Title post\",\"text\":\"Text post\"}"))
                                 .andExpect(status().isCreated())
                                 .andExpect(content().json(objectMapper.writeValueAsString(post))
-                        );
+        );
 
         verify(service, times(1)).createPost(requestPost);
     }
@@ -141,7 +152,6 @@ class PostControllerTest {
     @Test
     @DisplayName("Must be return 400 status when request not respected size rules for title in creation")
     void createPostCase2() throws Exception{
-
         RequestPost requestPost = new RequestPost("Tit", "Text post");
 
         Exception error = mockMvc.perform(post("/Posts/Create")
@@ -190,7 +200,8 @@ class PostControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(new RequestPost("New title of post", "New text of post"))))
                 .andExpect(status().isOk())
-                .andExpect(content().json(objectMapper.writeValueAsString(post)));
+                .andExpect(content().json(objectMapper.writeValueAsString(post))
+        );
 
         verify(service, times(1)).editPost(1L, new RequestPost("New title of post", "New text of post"));
     }
@@ -198,7 +209,6 @@ class PostControllerTest {
     @Test
     @DisplayName("Must be return a status 400 when request not respect title size rules for editing")
     void editPostCase2() throws Exception {
-
         Exception error =mockMvc.perform(put("/Posts/Edit/{id}", 1)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(new RequestPost("Pos", "Post text"))))

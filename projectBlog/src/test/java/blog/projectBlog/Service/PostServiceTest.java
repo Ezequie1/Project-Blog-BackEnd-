@@ -12,7 +12,11 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 import org.junit.jupiter.api.function.Executable;
-import java.util.Arrays;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -36,18 +40,20 @@ class PostServiceTest {
     void getAllCase1() {
         Post first = new Post("First post", "PostText", false);
         Post second = new Post("Second post", "PostText", false);
+        List<Post> posts = List.of(first, second);
 
-        List<Post>posts = Arrays.asList(first, second);
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<Post> postPage = new PageImpl<>(posts, pageable, posts.size());
 
-        when(repository.findAll()).thenReturn(posts);
+        when(repository.findAll(pageable)).thenReturn(postPage);
 
-        List<Post> result = service.getAll();
+        Page<Post> result = service.getAll(pageable);
 
-        verify(repository, times(1)).findAll();
+        verify(repository, times(1)).findAll(pageable);
 
-        assertEquals(2, result.size());
-        assertSame(first, result.get(0));
-        assertSame(second, result.get(1));
+        assertEquals(2, result.getContent().size());
+        assertSame(first, result.getContent().get(0));
+        assertSame(second, result.getContent().get(1));
     }
 
     @Test
@@ -69,28 +75,33 @@ class PostServiceTest {
         Post post = new Post("Second post", "PostText", false);
         List<Post> posts = List.of(post);
 
-        when(repository.findByTitleContainingOrTextContaining("Second", "Second")).thenReturn(posts);
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<Post> postPage = new PageImpl<>(posts, pageable, posts.size());
 
-        List<Post> result = repository.findByTitleContainingOrTextContaining("Second", "Second");
+        when(repository.findByTitleContainingOrTextContaining("Second", "Second", pageable)).thenReturn(postPage);
 
-        verify(repository, times(1)).findByTitleContainingOrTextContaining("Second", "Second");
+        Page<Post> result = repository.findByTitleContainingOrTextContaining("Second", "Second", pageable);
+
+        verify(repository, times(1)).findByTitleContainingOrTextContaining("Second", "Second", pageable);
 
         assertFalse(result.isEmpty());
-        assertEquals(1, result.size());
+        assertEquals(1, result.getContent().size());
         assertSame(post, posts.get(0));
     }
 
     @Test
     @DisplayName("Must be return an empty array when the DB not have one post with title or text equal to value")
     void getPostsContainingCase2() {
-        when(repository.findByTitleContainingOrTextContaining("Value", "Value")).thenReturn(List.of());
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<Post> postPage = new PageImpl<>(List.of(), pageable, 0);
+        when(repository.findByTitleContainingOrTextContaining("Value", "Value", pageable)).thenReturn(postPage);
 
-        List<Post> posts = repository.findByTitleContainingOrTextContaining("Value", "Value");
+        Page<Post> posts = repository.findByTitleContainingOrTextContaining("Value", "Value", pageable);
 
-        verify(repository, times(1)).findByTitleContainingOrTextContaining("Value", "Value");
+        verify(repository, times(1)).findByTitleContainingOrTextContaining("Value", "Value", pageable);
 
         assertTrue(posts.isEmpty());
-        assertEquals("[]", posts.toString());
+        assertEquals("[]", posts.getContent().toString());
     }
 
     @Test

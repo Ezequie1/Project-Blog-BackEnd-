@@ -6,10 +6,11 @@ import blog.projectBlog.Service.PostService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/Posts")
@@ -20,13 +21,18 @@ public class PostController {       //Acesse http://localhost:8080/swagger-ui/in
     private PostService service;
 
     @GetMapping
-    public ResponseEntity<List<Post>> getPosts(){
-        return ResponseEntity.status(200).body(service.getAll());
+    public ResponseEntity<Page<Post>> getPosts(@RequestParam(defaultValue = "0") int page,
+                                               @RequestParam(defaultValue = "10") int size){
+        Pageable pageable = PageRequest.of(page, size);
+        return ResponseEntity.status(200).body(service.getAll(pageable));
     }
 
     @GetMapping("/Search/{value}")
-    public ResponseEntity<List<Post>> getPostsContaining(@PathVariable String value){
-        return ResponseEntity.status(200).body(service.getPostsContaining(value));
+    public ResponseEntity<Page<Post>> getPostsContaining(@PathVariable String value,
+                                                         @RequestParam(defaultValue = "0") int page,
+                                                         @RequestParam(defaultValue = "10") int size){
+        Pageable pageable = PageRequest.of(page, size);
+        return ResponseEntity.status(200).body(service.getPostsContaining(value, pageable));
     }
 
     @PostMapping("/Create")

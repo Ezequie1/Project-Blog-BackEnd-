@@ -5,6 +5,8 @@ import blog.projectBlog.Model.RequestPost;
 import blog.projectBlog.Repository.PostRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -15,12 +17,12 @@ public class PostService {
     @Autowired
     private PostRepository repository;
 
-    public List<Post> getAll(){
-        return repository.findAll();
+    public Page<Post> getAll(Pageable pageRequest){
+        return repository.findAll(pageRequest);
     }
 
-    public List<Post> getPostsContaining(String value) {
-        return repository.findByTitleContainingOrTextContaining(value, value);
+    public Page<Post> getPostsContaining(String value, Pageable pageable) {
+        return repository.findByTitleContainingOrTextContaining(value, value, pageable);
     }
 
     public Post createPost(RequestPost post) {

@@ -6,9 +6,11 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.test.context.ActiveProfiles;
 
-import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -28,10 +30,10 @@ class PostRepositoryTest {
         Post post = new Post("Post title", "Post text", false);
         entityManager.persist(post);
 
-        List<Post> result = repository.findByTitleContainingOrTextContaining("title", "text");
+        Page<Post> result = repository.findByTitleContainingOrTextContaining("title", "text", PageRequest.of(0, 10));
 
-        assertEquals(post, result.get(0));
-        assertFalse(result.isEmpty());
+        assertEquals(post, result.getContent().get(0));
+        assertFalse(result.getContent().isEmpty());
     }
 
     @Test
@@ -40,13 +42,15 @@ class PostRepositoryTest {
         Post post = new Post("Post title", "Post text", false);
         entityManager.persist(post);
 
-        List<Post> result = repository.findByTitleContainingOrTextContaining("Random value", "Random value");
-        List<Post> hasValues = repository.findByTitleContainingOrTextContaining("Post", "Post");
+        Pageable pageable = PageRequest.of(0, 10);
 
-        assertTrue(result.isEmpty());
-        assertEquals("[]", result.toString());
+        Page<Post> result = repository.findByTitleContainingOrTextContaining("Random value", "Random value", pageable);
+        Page<Post> hasValues = repository.findByTitleContainingOrTextContaining("Post", "Post", pageable);
 
-        assertEquals(post, hasValues.get(0));
-        assertFalse(hasValues.isEmpty());
+        assertTrue(result.getContent().isEmpty());
+        assertEquals("[]", result.getContent().toString());
+
+        assertEquals(post, hasValues.getContent().get(0));
+        assertFalse(hasValues.getContent().isEmpty());
     }
 }
