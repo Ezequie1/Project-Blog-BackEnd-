@@ -96,7 +96,7 @@ class PostServiceTest {
         Page<Post> postPage = new PageImpl<>(List.of(), pageable, 0);
         when(repository.findByTitleContainingOrTextContaining("Value", "Value", pageable)).thenReturn(postPage);
 
-        Page<Post> posts = repository.findByTitleContainingOrTextContaining("Value", "Value", pageable);
+        Page<Post> posts = service.getPostsContaining("Value", pageable);
 
         verify(repository, times(1)).findByTitleContainingOrTextContaining("Value", "Value", pageable);
 
